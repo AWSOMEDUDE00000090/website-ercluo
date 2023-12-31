@@ -1,7 +1,11 @@
 div {
     font-family: 'Roboto', sans-serif;
-    color: white;
+    color: rgb(0, 0, 0);
     background-color: black;
+}
+
+.header {
+    text-align: center;
 }
 
 p {
@@ -9,8 +13,13 @@ p {
     font-family: 'Roboto', sans-serif;
     font-size: larger;
     background-color: rgb(24, 221, 126);
+    border-radius: 10px;
+    border: 2px solid #000000;
+    padding: 10px;
+    width: auto;
+    height: auto; 
 }
 
-body {
+html {
     font-family: 'Roboto', sans-serif;
 }
