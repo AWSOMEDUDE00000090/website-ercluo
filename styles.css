@@ -1,5 +1,4 @@
 div {
-    font-family: 'Roboto', sans-serif;
     color: rgb(0, 0, 0);
     background-color: black;
 }
@@ -10,7 +9,6 @@ div {
 
 p {
     color: rgb(0, 0, 0);
-    font-family: 'Roboto', sans-serif;
     font-size: larger;
     background-color: rgb(24, 221, 126);
     border-radius: 10px;
@@ -24,6 +22,6 @@ p {
     background-color: blueviolet;
 }
 
-html {
+* {
     font-family: 'Roboto', sans-serif;
 }
