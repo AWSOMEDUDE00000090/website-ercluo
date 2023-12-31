@@ -1,0 +1,16 @@
+div {
+    font-family: 'Roboto', sans-serif;
+    color: white;
+    background-color: black;
+}
+
+p {
+    color: rgb(0, 0, 0);
+    font-family: 'Roboto', sans-serif;
+    font-size: larger;
+    background-color: rgb(24, 221, 126);
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+}
