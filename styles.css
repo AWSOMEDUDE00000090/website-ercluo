@@ -4,7 +4,7 @@ div {
 }
 
 .header {
-    text-align: center;
+    text-align: start;
 }
 
 p {
@@ -21,7 +21,11 @@ p {
     color:aquamarine;
     background-color: blueviolet;
 }
-
+img {
+    max-width: 100%;
+    width: auto;
+    height: px;
+}
 * {
     font-family: 'Roboto', sans-serif;
 }
