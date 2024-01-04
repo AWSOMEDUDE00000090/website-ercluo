@@ -1,31 +1,37 @@
 div {
-    color: rgb(0, 0, 0);
-    background-color: black;
+    padding: 30%;
+    text-align: center;
+    color: #EEEEEE;
+    display: block;
 }
 
 .header {
     text-align: start;
+    text-align: center;
+    background-color: rgb(255, 255, 255);
+}
+
+.intro {
+    background-color: rgb(140, 188, 188);
+}
+
+.main {
+    background-color: rgb(187, 187, 159);
+}
+
+.footer {
+    background-color: cadetblue;
+
 }
 
 p {
-    color: rgb(0, 0, 0);
-    font-size: larger;
-    background-color: rgb(24, 221, 126);
-    border-radius: 10px;
-    border: 2px solid #000000;
-    padding: 10px;
-    width: auto;
-    height: auto; 
+    color: aliceblue;
 }
-.SUB {
-    color:aquamarine;
-    background-color: blueviolet;
-}
-img {
-    max-width: 100%;
-    width: auto;
-    height: px;
-}
+
+
 * {
     font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
