@@ -8,18 +8,18 @@ div {
 .header {
     text-align: start;
     text-align: center;
-    background-color: rgb(255, 255, 255);
+    background-color: rgb(219, 148, 148);
 }
 
-.intro {
+.a {
     background-color: rgb(140, 188, 188);
 }
 
-.main {
+.b {
     background-color: rgb(187, 187, 159);
 }
 
-.footer {
+.c {
     background-color: cadetblue;
 
 }
