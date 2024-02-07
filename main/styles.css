@@ -8,7 +8,7 @@ div {
 .header {
     text-align: start;
     text-align: center;
-    background-color: rgb(255, 189, 189);
+    background-color: rgb(255, 255, 255);
 }
 
 .a {
@@ -26,6 +26,10 @@ div {
 
 p {
     color: aliceblue;
+}
+
+a {
+    text-decoration: none;
 }
 
 
