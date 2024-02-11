@@ -13,6 +13,9 @@ div {
 
 .a {
     background-color: rgb(140, 188, 188);
+    margin-left: auto;
+    margin-right: auto;
+    
 }
 
 .b {
@@ -22,6 +25,10 @@ div {
 .c {
     background-color: cadetblue;
 
+}
+
+.grid {
+    min-height: 100vh;
 }
 
 p {
