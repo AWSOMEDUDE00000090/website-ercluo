@@ -1,8 +1,11 @@
-div {
+div.about, div.projects, div.blog {
     padding: 20%;
     text-align: center;
     color: #EEEEEE;
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
 .header {
@@ -11,33 +14,33 @@ div {
     background-color: rgb(255, 255, 255);
 }
 
-.a {
+.about {
     background-color: rgb(140, 188, 188);
     margin-left: auto;
     margin-right: auto;
 
 }
 
-.b {
+.projects {
     background-color: rgb(187, 187, 159);
 }
 
-.c {
+.blog {
     background-color: cadetblue;
 
 }
 
-.grid {
-    min-height: 100vh;
+div.footer {
+    margin-top: auto;
 }
 
-p {
-    color: aliceblue;
-}
+
 
 a {
     text-decoration: none;
 }
+
+
 
 
 * {
