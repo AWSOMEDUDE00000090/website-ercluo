@@ -5,13 +5,14 @@ div.about, div.projects, div.blog {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: calc(100vh - 38px) ;
 }
 
 .header {
     text-align: start;
     text-align: center;
     background-color: rgb(255, 255, 255);
+
 }
 
 .about {
@@ -26,21 +27,43 @@ div.about, div.projects, div.blog {
 }
 
 .blog {
-    background-color: cadetblue;
+    background-color: rgb(95, 158, 160);
 
 }
 
 div.footer {
     margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
 }
 
+a.github {
+    text-align: center;
+}
 
+img {
+    max-width: 30%;
+    height: auto;
+}
+
+body {
+
+}
 
 a {
     text-decoration: none;
 }
 
 
+#element {
+    scrollbar-width: none;
+}
+
+p {
+    text-align: center;
+}
 
 
 * {
