@@ -8,6 +8,14 @@ div.about, div.projects, div.blog {
     height: calc(100vh - 38px) ;
 }
 
+.filter {
+    filter: invert(0%) sepia(0%) saturate(7500%) hue-rotate(182deg) brightness(0%) contrast(105%);
+}
+
+.header-logo {
+    width: 25px;
+}
+
 .header {
     text-align: start;
     text-align: center;
