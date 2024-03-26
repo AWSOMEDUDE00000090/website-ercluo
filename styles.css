@@ -27,7 +27,20 @@ div.about, div.projects, div.blog {
     background-color: rgb(140, 188, 188);
     margin-left: auto;
     margin-right: auto;
+}
 
+.about-content {
+    background-color: rgb(140, 188, 188);
+    height: calc(100vh - 38px) ;   
+    color: #EEEEEE;
+}
+
+.center {
+    padding: 30px;
+    display: grid;
+    margin: 0 auto;
+    max-width: 66vh;
+    height: calc(100vh - 38px) ;
 }
 
 .projects {
@@ -38,6 +51,7 @@ div.about, div.projects, div.blog {
     background-color: rgb(95, 158, 160);
 
 }
+
 
 div.footer {
     margin-top: auto;
@@ -56,9 +70,7 @@ img {
     height: auto;
 }
 
-body {
 
-}
 
 a {
     text-decoration: none;
