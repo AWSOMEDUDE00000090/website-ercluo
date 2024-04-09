@@ -5,7 +5,12 @@ div.about, div.projects, div.blog {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: calc(100vh - 38px) ;
+    height: calc(100vh - 38px);
+    
+}
+
+h2.big,h1.big {
+    font-size: 100px;
 }
 
 .filter {
