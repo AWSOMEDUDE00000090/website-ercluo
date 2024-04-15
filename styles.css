@@ -21,7 +21,7 @@ h2.big,h1.big {
     width: 25px;
 }
 
-.header {
+.header { 
     text-align: start;
     text-align: center;
     background-color: rgb(255, 255, 255);
@@ -29,7 +29,7 @@ h2.big,h1.big {
 }
 
 .about {
-    background-color: rgb(140, 188, 188);
+    background-color: rgb(140, 188, 188); 
     margin-left: auto;
     margin-right: auto;
 }
