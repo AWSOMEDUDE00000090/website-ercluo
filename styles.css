@@ -1,100 +1,35 @@
-div.about, div.projects, div.blog {
-    padding: 20%;
-    text-align: center;
-    color: #EEEEEE;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: calc(100vh - 38px);
-    
-}
-
-h2.big,h1.big {
-    font-size: 100px;
-}
-
-.filter {
-    filter: invert(0%) sepia(0%) saturate(7500%) hue-rotate(182deg) brightness(0%) contrast(105%);
-}
-
-.header-logo {
-    width: 25px;
-}
-
-.header { 
-    text-align: start;
-    text-align: center;
-    background-color: rgb(255, 255, 255);
-
-}
-
-.about {
-    background-color: rgb(140, 188, 188); 
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.about-content {
-    background-color: rgb(140, 188, 188);
-    height: calc(100vh - 38px) ;   
-    color: #EEEEEE;
-}
-
-.center {
-    padding: 30px;
-    display: grid;
-    margin: 0 auto;
-    max-width: 66vh;
-    height: calc(100vh - 38px) ;
-}
-
-.projects {
-    background-color: rgb(187, 187, 159);
-}
-
-.blog {
-    background-color: rgb(95, 158, 160);
-
-}
-
-
-div.footer {
-    margin-top: auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px;
-}
-
-a.github {
-    text-align: center;
-}
-
-img {
-    max-width: 30%;
-    height: auto;
-}
-
-
-
-a {
-    text-decoration: none;
-}
-
-
-#element {
-    scrollbar-width: none;
-}
-
-p {
-    text-align: center;
-}
-
-
+/* General styles */
 * {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Roboto Mono', monospace;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     text-decoration: none;
+}
+
+body {
+    background-color: #000;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.dot-matrix {
+    display: grid;
+    gap: 2px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background-color: #333;
+    border-radius: 50%;
+}
+
+.dot.on {
+    background-color: #00ff00;
 }
