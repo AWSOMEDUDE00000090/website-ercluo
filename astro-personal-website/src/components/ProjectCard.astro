@@ -1,0 +1,36 @@
+---
+// src/components/ProjectCard.astro
+export let title: string;
+export let description: string;
+export let link: string;
+---
+
+<a href={link} class="project-card">
+  <h2>{title}</h2>
+  <p>{description}</p>
+</a>
+
+<style>
+  .project-card {
+    display: block;
+    padding: 20px;
+    margin: 10px 0;
+    border: 1px solid #000;
+    text-decoration: none;
+    color: #000;
+    background-color: #fff;
+  }
+
+  .project-card:hover {
+    background-color: #f0f0f0;
+  }
+
+  .project-card h2 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
+
+  .project-card p {
+    margin: 10px 0 0;
+  }
+</style>
