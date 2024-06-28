@@ -1,8 +1,12 @@
 ---
 // src/components/ProjectCard.astro
-export let title: string;
-export let description: string;
-export let link: string;
+interface Props {
+  title: string;
+  description: string;
+  link: string;
+}
+
+const { title, description, link } = Astro.props as Props;
 ---
 
 <a href={link} class="project-card">

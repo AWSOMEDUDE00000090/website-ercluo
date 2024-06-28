@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout>
+  <section class="about">
+    <h1>About Me</h1>
+    <p>Hi! I'm a high schooler on the west coast hoping to make a difference through making things</p>
+    <p>
+        <br>I enjoy building software and hardware projects, you can view them 
+        <a href="../projects" style="text-decoration: none" draggable="false"> here </a>.
+    </p>
+  </section>
+
+  <style>
+    .about {
+      padding: 20px;
+      background-color: #fff;
+      color: #000;
+      border: 1px solid #000;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .about h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+    .about p {
+      margin-bottom: 15px;
+    }
+  </style>
+</BaseLayout>

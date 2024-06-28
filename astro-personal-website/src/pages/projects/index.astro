@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+
+const projects = import.meta.glob('./project-writeups/*.mdx', { eager: true });
+
+const projectList = Object.keys(projects).map((key) => {
+  const slug = key.match(/\.\/project-writeups\/(.*)\.mdx$/)[1];
+  const { frontmatter } = projects[key];
+  return {
+    slug,
+    ...frontmatter,
+  };
+});
+---
+
+<BaseLayout>
+  <div class="projects-container">
+    {projectList.length === 0 ? (
+      <p>No projects found.</p>
+    ) : (
+      projectList.map((project) => (
+        <ProjectCard
+          key={project.slug}
+          title={project.title}
+          description={project.description}
+          link={`/projects/${project.slug}`}
+        />
+      ))
+    )}
+  </div>
+
+  <style>
+    .projects-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+  </style>
+</BaseLayout>

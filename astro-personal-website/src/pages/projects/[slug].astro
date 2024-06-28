@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { Markdown } from 'astro/components';
+
+interface Params {
+  slug: string;
+}
+
+export async function getStaticPaths() {
+  const projects = import.meta.glob('../project-writeups/*.mdx', { eager: true });
+
+  const paths = Object.keys(projects).map((file) => {
+    const slug = file.match(/\.\/project-writeups\/(.*)\.mdx$/)[1];
+    return { params: { slug } };
+  });
+
+  return { paths }; // Return an object with paths key
+}
+
+const { slug } = Astro.params as Params;
+const projectPath = `../project-writeups/${slug}.mdx`;
+
+const project = await import(projectPath);
+const { frontmatter, content } = project;
+---
+
+<BaseLayout>
+  <div class="project-container">
+    <h1>{frontmatter.title}</h1>
+    <article>
+      <Markdown>{content}</Markdown>
+    </article>
+  </div>
+
+  <style>
+    .project-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    article {
+      width: 100%;
+      padding: 20px;
+      background-color: #fff;
+      border: 1px solid #000;
+      line-height: 1.6;
+    }
+  </style>
+</BaseLayout>
