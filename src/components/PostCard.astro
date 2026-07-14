@@ -1,0 +1,76 @@
+---
+import type { CollectionEntry } from "astro:content";
+import FormattedDate from "./FormattedDate.astro";
+import { readingTime } from "@/utils";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+---
+
+<article class="post-card">
+  <div class="meta">
+    <FormattedDate date={post.data.pubDate} />
+    <span aria-hidden="true">·</span>
+    <span>{readingTime(post.body)}</span>
+  </div>
+  <h3><a href={`/blog/${post.id}/`}>{post.data.title}</a></h3>
+  <p>{post.data.description}</p>
+  {
+    post.data.tags.length > 0 && (
+      <ul class="tags" aria-label="Tags">
+        {post.data.tags.map((tag) => (
+          <li>
+            <span class="tag">{tag}</span>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</article>
+
+<style>
+  .post-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-block: 1.5rem;
+  }
+
+  .meta {
+    display: flex;
+    gap: 0.5rem;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+  }
+
+  h3 a {
+    color: var(--text);
+  }
+
+  h3 a:hover {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    max-width: 60ch;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    list-style: none;
+    padding: 0;
+    margin-top: 0.25rem;
+  }
+</style>

@@ -1,0 +1,49 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import ProjectCard from "@/components/ProjectCard.astro";
+import { isPublished, slugifyTag, sortProjects } from "@/utils";
+
+const projects = sortProjects(await getCollection("projects", isPublished));
+const allTech = [...new Set(projects.flatMap((p) => p.data.tech))].sort();
+---
+
+<BaseLayout
+  title="Projects"
+  description="Hardware and software builds — embedded systems, 3D printing, and the tools around them."
+>
+  <div class="container">
+    <header class="page-header">
+      <h1>Projects</h1>
+      <p>
+        Things I've designed, soldered, printed, or programmed. Most have a
+        full write-up.
+      </p>
+    </header>
+
+    {
+      allTech.length > 0 && (
+        <nav class="tag-nav" aria-label="Filter by technology">
+          <ul>
+            <li>
+              <a class="tag" aria-current="true" href="/projects/">
+                All
+              </a>
+            </li>
+            {allTech.map((tech) => (
+              <li>
+                <a class="tag" href={`/projects/tech/${slugifyTag(tech)}/`}>
+                  {tech}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )
+    }
+
+    <div class="project-grid">
+      {projects.map((project) => <ProjectCard project={project} />)}
+    </div>
+  </div>
+</BaseLayout>

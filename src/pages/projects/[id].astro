@@ -1,0 +1,159 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection, render } from "astro:content";
+import { Image } from "astro:assets";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { isPublished, slugifyTag } from "@/utils";
+
+export const getStaticPaths = (async () => {
+  const projects = await getCollection("projects", isPublished);
+  return projects.map((project) => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}) satisfies GetStaticPaths;
+
+const { project } = Astro.props;
+const { Content } = await render(project);
+const { title, summary, period, tech, role, links, coverImage, coverImageAlt, gallery } =
+  project.data;
+
+const linkEntries = [
+  { key: "repo", label: "Source" },
+  { key: "live", label: "Live site" },
+  { key: "demo", label: "Demo" },
+  { key: "video", label: "Video" },
+]
+  .map(({ key, label }) => ({
+    label,
+    href: links?.[key as keyof typeof links],
+  }))
+  .filter((l): l is { label: string; href: string } => Boolean(l.href));
+---
+
+<BaseLayout
+  title={title}
+  description={summary}
+  ogType="article"
+  image={coverImage?.src}
+>
+  <article class="container container--narrow">
+    <header class="page-header">
+      <p class="eyebrow">{period}{role && ` · ${role}`}</p>
+      <h1>{title}</h1>
+      <p>{summary}</p>
+      {
+        tech.length > 0 && (
+          <ul class="tag-list" aria-label="Technologies">
+            {tech.map((t) => (
+              <li>
+                <a class="tag" href={`/projects/tech/${slugifyTag(t)}/`}>
+                  {t}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+      {
+        linkEntries.length > 0 && (
+          <ul class="link-list" aria-label="Project links">
+            {linkEntries.map(({ label, href }) => (
+              <li>
+                <a
+                  class="button"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {label} ↗
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </header>
+
+    {
+      coverImage && (
+        <Image
+          src={coverImage}
+          alt={coverImageAlt ?? ""}
+          width={1400}
+          class="cover-image"
+        />
+      )
+    }
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    {
+      gallery && gallery.length > 0 && (
+        <section class="gallery" aria-label="Gallery">
+          <h2>Gallery</h2>
+          <div class="gallery-grid">
+            {gallery.map(({ src, alt }) => (
+              <Image src={src} alt={alt} width={800} />
+            ))}
+          </div>
+        </section>
+      )
+    }
+
+    <p class="back-link"><a href="/projects/">← Back to projects</a></p>
+  </article>
+</BaseLayout>
+
+<style>
+  .tag-list,
+  .link-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+  }
+
+  .link-list {
+    margin-top: 1.25rem;
+    gap: 0.75rem;
+  }
+
+  .cover-image {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .gallery {
+    margin-top: 3.5rem;
+  }
+
+  .gallery h2 {
+    font-size: var(--text-xl);
+    margin-bottom: 1.25rem;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1rem;
+  }
+
+  .gallery-grid img {
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .back-link {
+    margin-top: 3rem;
+    font-size: var(--text-sm);
+  }
+</style>

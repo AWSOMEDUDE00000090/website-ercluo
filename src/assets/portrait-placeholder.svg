@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" fill="#f1efeb"/>
+  <circle cx="400" cy="310" r="130" fill="none" stroke="#c9c4bb" stroke-width="8"/>
+  <path d="M170 700 C 170 540, 630 540, 630 700" fill="none" stroke="#c9c4bb" stroke-width="8"/>
+  <text x="400" y="758" text-anchor="middle" font-family="Menlo, monospace" font-size="30" fill="#a19b92">photo slot — replace me</text>
+</svg>

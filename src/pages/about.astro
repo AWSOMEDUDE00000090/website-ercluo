@@ -1,0 +1,29 @@
+---
+import { getEntry, render } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+// The About page body lives in src/content/pages/about.md — edit it there.
+const about = await getEntry("pages", "about");
+if (!about) throw new Error("Missing src/content/pages/about.md");
+const { Content } = await render(about);
+---
+
+<BaseLayout title={about.data.title} description={about.data.description}>
+  <div class="container container--narrow">
+    <header class="page-header">
+      <h1>{about.data.title}</h1>
+    </header>
+    <div class="prose about-prose">
+      <Content />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* The first image in the About body is the portrait — keep it modest. */
+  .about-prose :global(> p:first-child img) {
+    max-width: min(260px, 60%);
+    border-radius: var(--radius-lg);
+    margin-inline: 0;
+  }
+</style>

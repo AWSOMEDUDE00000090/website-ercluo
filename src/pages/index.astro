@@ -1,0 +1,94 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import CAHero from "@/components/CAHero.astro";
+import ProjectCard from "@/components/ProjectCard.astro";
+import PostCard from "@/components/PostCard.astro";
+import { SITE_TITLE, SITE_TAGLINE, SITE_DESCRIPTION } from "@/consts";
+import { isPublished, sortPostsNewestFirst, sortProjects } from "@/utils";
+
+const featuredProjects = sortProjects(
+  await getCollection("projects", (p) => isPublished(p) && p.data.featured),
+).slice(0, 3);
+
+const latestPosts = sortPostsNewestFirst(
+  await getCollection("blog", isPublished),
+).slice(0, 3);
+---
+
+<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <CAHero text="Eric Luo" />
+
+  <div class="container">
+    <section class="intro">
+      <p>{SITE_TAGLINE}</p>
+      <div class="intro-links">
+        <a href="/projects/" class="button button--primary">See my projects</a>
+        <a href="/about/" class="button">About me</a>
+      </div>
+    </section>
+
+    <section class="strip" aria-labelledby="featured-heading">
+      <div class="strip-header">
+        <h2 id="featured-heading">Featured projects</h2>
+        <a href="/projects/">All projects →</a>
+      </div>
+      <div class="project-grid">
+        {featuredProjects.map((project) => <ProjectCard project={project} />)}
+      </div>
+    </section>
+
+    <section class="strip" aria-labelledby="latest-heading">
+      <div class="strip-header">
+        <h2 id="latest-heading">Latest writing</h2>
+        <a href="/blog/">All posts →</a>
+      </div>
+      <div class="post-list">
+        {latestPosts.map((post) => <PostCard post={post} />)}
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .intro {
+    max-width: 38rem;
+    margin-inline: auto;
+    text-align: center;
+    padding-block: 1rem 2rem;
+  }
+
+  .intro p {
+    font-size: var(--text-lg);
+    color: var(--text-muted);
+    text-wrap: balance;
+  }
+
+  .intro-links {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+  }
+
+  .strip {
+    margin-top: 4.5rem;
+  }
+
+  .strip-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.5rem;
+  }
+
+  .strip-header h2 {
+    font-size: var(--text-xl);
+  }
+
+  .strip-header a {
+    font-size: var(--text-sm);
+    white-space: nowrap;
+  }
+
+</style>

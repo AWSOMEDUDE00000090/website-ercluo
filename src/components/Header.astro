@@ -1,0 +1,90 @@
+---
+import ThemeToggle from "./ThemeToggle.astro";
+import { SITE_TITLE } from "@/consts";
+
+const navItems = [
+  { href: "/projects/", label: "Projects" },
+  { href: "/blog/", label: "Blog" },
+  { href: "/about/", label: "About" },
+];
+
+const currentPath = Astro.url.pathname;
+const isActive = (href: string) => currentPath.startsWith(href);
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="wordmark">{SITE_TITLE}</a>
+    <nav aria-label="Main">
+      <ul>
+        {
+          navItems.map(({ href, label }) => (
+            <li>
+              <a href={href} aria-current={isActive(href) ? "page" : undefined}>
+                {label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <ThemeToggle />
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 3.75rem;
+  }
+
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--text-lg);
+    color: var(--text);
+    letter-spacing: -0.01em;
+    margin-right: auto;
+  }
+
+  .wordmark:hover {
+    text-decoration: none;
+    color: var(--accent);
+  }
+
+  nav ul {
+    display: flex;
+    gap: clamp(0.9rem, 3vw, 1.75rem);
+    list-style: none;
+    padding: 0;
+  }
+
+  nav a {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-muted);
+    padding-block: 0.35rem;
+  }
+
+  nav a:hover {
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  nav a[aria-current="page"] {
+    color: var(--text);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+</style>
