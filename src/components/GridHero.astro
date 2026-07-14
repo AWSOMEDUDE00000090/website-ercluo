@@ -1,11 +1,11 @@
 ---
-// The signature hero. The heading is rasterized into a coarse grid; each
-// grid cell holds an ink "density" in [0,1]. Idle, every cell relaxes
-// toward the rasterized glyph pattern (a fixed attractor), so the type
-// reads crisp. Near the cursor, cells evolve by a dispersive CA rule —
-// diffusion into the four neighbors plus advection away from the pointer,
-// with a pinch of noise — so letters visibly break apart cell-by-cell and
-// re-form when the pointer leaves.
+// The signature hero, dot-matrix edition. The heading is rasterized onto a
+// grid of round "LED" dots. Idle, lit dots relax toward the glyph pattern
+// (the attractor), so the type reads crisp on a faint panel of unlit dots.
+// Near the cursor, cells evolve under a genuine cellular automaton — a
+// Game-of-Life B3/S23 rule stepping in discrete generations, stirred with
+// a little noise at the pointer — so the letters boil apart cell-by-cell
+// into live automata debris, then heal when the pointer leaves.
 //
 // Accessibility: the <h1> below is the real text. The canvas only takes
 // over when JS runs, layout exists, and the user allows motion.
@@ -23,19 +23,22 @@ const { text } = Astro.props;
 
 <script>
   // ----- Tunables ---------------------------------------------------
-  const CELL = 6; // grid cell size, CSS px
-  const GAP_RATIO = 0.18; // fraction of the cell left empty around the square
+  const CELL = 7; // dot pitch (grid spacing), CSS px
+  const DOT_RADIUS = 2.4; // lit dot radius, CSS px
+  const OFF_DOT_ALPHA = 0.1; // the unlit panel dots (0 hides the panel)
   const RADIUS = 150; // cursor influence radius, px
-  const DIFFUSION = 0.22; // neighbor exchange rate at full influence
-  const ADVECTION = 0.55; // outward push away from the cursor
-  const NOISE = 0.05; // stochastic churn inside the influence zone
-  const RETURN_RATE = 0.09; // relaxation toward the glyph attractor
-  const SIZE_LEVELS = 5; // quantized cell sizes (the "digital" look)
-  const MIN_DENSITY = 0.045; // below this a cell isn't drawn
-  const FONT = "600 REMpx 'Space Grotesk Variable', sans-serif"; // REM replaced at runtime
+  const CA_HZ = 14; // automaton generations per second
+  const BIRTH = [3]; // B3/S23 — Conway's Game of Life
+  const SURVIVE = [2, 3];
+  const STIR = 0.22; // random toggles near the pointer, keeps it churning
+  const STIR_ZONE = 0.45; // fraction of RADIUS that gets stirred
+  const SNAP_RATE = 0.5; // how fast dots pop between CA generations
+  const RETURN_RATE = 0.08; // relaxation toward the glyph when undisturbed
+  const GLOW_LEVELS = 4; // quantized brightness steps
+  const MIN_DRAW = 0.06; // dots dimmer than this aren't drawn
+  const FONT = "600 REMpx 'Space Grotesk Variable', sans-serif";
   const WIDTH_FILL = 0.92; // max fraction of hero width the text may span
-  const HEIGHT_FILL = 0.6; // …and of its height
-  const STEP = 1000 / 60; // fixed simulation timestep, ms
+  const HEIGHT_FILL = 0.6;
 
   const root = document.getElementById("grid-hero")!;
   const canvas = root.querySelector("canvas")!;
@@ -44,20 +47,22 @@ const { text } = Astro.props;
 
   let gw = 0,
     gh = 0;
-  let target = new Float32Array(0);
-  let state = new Float32Array(0);
-  let scratch = new Float32Array(0);
+  let target = new Uint8Array(0); // glyph pattern (the attractor), binary
+  let alive = new Uint8Array(0); // current CA generation, binary
+  let nextGen = new Uint8Array(0);
+  let glow = new Float32Array(0); // rendered brightness, eased between gens
+  let panel: HTMLCanvasElement | null = null; // cached unlit-dot background
 
   let ink = "#000";
-  let px = -1e9, // pointer position in grid units
+  let px = -1e9,
     py = -1e9;
   let pointerOn = false;
-  let live = false; // canvas has taken over from the h1
+  let live = false;
   let running = false;
   let inView = true;
   let raf = 0;
-  let last = 0;
-  let acc = 0;
+  let lastFrame = 0;
+  let genAcc = 0;
 
   const readInk = () => {
     ink = getComputedStyle(document.documentElement)
@@ -77,129 +82,197 @@ const { text } = Astro.props;
 
     gw = Math.floor(rect.width / CELL);
     gh = Math.floor(rect.height / CELL);
-    target = new Float32Array(gw * gh);
-    state = new Float32Array(gw * gh);
-    scratch = new Float32Array(gw * gh);
+    const n = gw * gh;
+    target = new Uint8Array(n);
+    alive = new Uint8Array(n);
+    nextGen = new Uint8Array(n);
+    glow = new Float32Array(n);
 
     const off = document.createElement("canvas");
     off.width = gw;
     off.height = gh;
     const o = off.getContext("2d", { willReadFrequently: true })!;
-
-    // Measure at 100px, then scale to fit the fill box.
     o.font = FONT.replace("REM", "100");
     const m = o.measureText(TEXT);
     const h100 = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent || 100;
     const size =
       100 *
-      Math.min((gw * WIDTH_FILL) / Math.max(m.width, 1), (gh * HEIGHT_FILL) / h100);
+      Math.min(
+        (gw * WIDTH_FILL) / Math.max(m.width, 1),
+        (gh * HEIGHT_FILL) / h100,
+      );
     o.font = FONT.replace("REM", String(size));
     o.textAlign = "center";
     o.textBaseline = "middle";
     o.fillStyle = "#fff";
     o.fillText(TEXT, gw / 2, gh / 2);
 
+    // Binary threshold — a dot is either part of the glyph or it isn't.
     const data = o.getImageData(0, 0, gw, gh).data;
-    for (let i = 0; i < target.length; i++) target[i] = data[i * 4 + 3]! / 255;
-    state.set(target);
+    for (let i = 0; i < n; i++) target[i] = data[i * 4 + 3]! > 115 ? 1 : 0;
+    alive.set(target);
+    for (let i = 0; i < n; i++) glow[i] = target[i]!;
+
+    buildPanel(rect.width, rect.height, dpr);
     return true;
   }
 
-  /** One CA step: diffusion + outward advection near the cursor, relaxation home elsewhere. */
-  function step() {
+  /** Pre-render the unlit dot panel once; blitted every frame. */
+  function buildPanel(w: number, h: number, dpr: number) {
+    panel = document.createElement("canvas");
+    panel.width = canvas.width;
+    panel.height = canvas.height;
+    const p = panel.getContext("2d")!;
+    p.setTransform(dpr, 0, 0, dpr, 0, 0);
+    p.fillStyle = ink;
+    p.globalAlpha = OFF_DOT_ALPHA;
+    for (let y = 0; y < gh; y++) {
+      const cy = y * CELL + CELL / 2;
+      for (let x = 0; x < gw; x++) {
+        p.beginPath();
+        p.arc(x * CELL + CELL / 2, cy, DOT_RADIUS * 0.7, 0, Math.PI * 2);
+        p.fill();
+      }
+    }
+  }
+
+  /**
+   * One CA generation. Inside the cursor radius, cells live and die by
+   * B3/S23 over the 8-neighborhood; a small zone at the pointer gets
+   * random toggles so the colony keeps churning. Outside the radius the
+   * generation is pinned to the glyph, which also acts as the stable
+   * substrate the automaton eats into at the boundary.
+   */
+  function generation() {
     const r = RADIUS / CELL;
     const r2 = r * r;
-    const n = scratch;
-    n.set(state);
+    const stir2 = r2 * STIR_ZONE * STIR_ZONE;
+
+    // Only sweep the automaton's bounding box; pin everything else.
+    nextGen.set(target);
+    if (!pointerOn) {
+      alive.set(nextGen);
+      return;
+    }
+
+    const x0 = Math.max(0, Math.floor(px - r) - 1);
+    const x1 = Math.min(gw - 1, Math.ceil(px + r) + 1);
+    const y0 = Math.max(0, Math.floor(py - r) - 1);
+    const y1 = Math.min(gh - 1, Math.ceil(py + r) + 1);
+
+    for (let y = y0; y <= y1; y++) {
+      const dy = y - py;
+      for (let x = x0; x <= x1; x++) {
+        const dx = x - px;
+        const d2 = dx * dx + dy * dy;
+        if (d2 >= r2) continue; // outside: stays pinned to target
+
+        // Count live neighbors (out-of-influence neighbors read from the
+        // current generation too, so the glyph feeds the boundary).
+        let nb = 0;
+        for (let oy = -1; oy <= 1; oy++) {
+          const yy = y + oy;
+          if (yy < 0 || yy >= gh) continue;
+          const rowOff = yy * gw;
+          for (let ox = -1; ox <= 1; ox++) {
+            if (ox === 0 && oy === 0) continue;
+            const xx = x + ox;
+            if (xx < 0 || xx >= gw) continue;
+            nb += alive[rowOff + xx]!;
+          }
+        }
+
+        const i = y * gw + x;
+        const on = alive[i]! === 1;
+        let next = on ? SURVIVE.includes(nb) : BIRTH.includes(nb);
+
+        // Stir the pot right at the pointer.
+        if (d2 < stir2 && Math.random() < STIR) next = !next;
+
+        nextGen[i] = next ? 1 : 0;
+      }
+    }
+    const swap = alive;
+    alive = nextGen;
+    nextGen = swap;
+  }
+
+  /** Ease dot brightness toward the current generation / the attractor. */
+  function settle(dtMs: number) {
+    const r = RADIUS / CELL;
+    const r2 = r * r;
+    const k = 1 - Math.exp(-(dtMs / 16.7));
+    const snap = SNAP_RATE * k;
+    const relax = RETURN_RATE * k;
 
     for (let y = 0; y < gh; y++) {
       const dy = y - py;
-      const rowUp = (y > 0 ? y - 1 : 0) * gw;
-      const rowDn = (y < gh - 1 ? y + 1 : gh - 1) * gw;
       const row = y * gw;
       for (let x = 0; x < gw; x++) {
         const i = row + x;
-        const dx = x - px;
-        const d2 = dx * dx + dy * dy;
-        const s = state[i]!;
-        const t = target[i]!;
-
-        if (pointerOn && d2 < r2) {
-          const dist = Math.sqrt(d2) || 1;
-          const f = (1 - dist / r) ** 2; // smooth falloff, 1 at cursor
-
-          // Diffusion: exchange with the 4-neighborhood (clamped edges).
-          const l = state[row + (x > 0 ? x - 1 : 0)]!;
-          const rt = state[row + (x < gw - 1 ? x + 1 : gw - 1)]!;
-          const u = state[rowUp + x]!;
-          const dn = state[rowDn + x]!;
-          const avg = (l + rt + u + dn) / 4;
-          let v = s + DIFFUSION * f * (avg - s);
-
-          // Advection: pull density from the cell one step closer to the
-          // cursor, so ink streams radially outward from the pointer.
-          const ux = Math.round(dx / dist);
-          const uy = Math.round(dy / dist);
-          const sx = Math.min(gw - 1, Math.max(0, x - ux));
-          const sy = Math.min(gh - 1, Math.max(0, y - uy));
-          v += ADVECTION * f * (state[sy * gw + sx]! - s);
-
-          // Noise: stochastic churn so the region reads as automata, not blur.
-          v += NOISE * f * (Math.random() - 0.5);
-
-          // Weak pull home keeps total ink from bleaching out entirely.
-          v += RETURN_RATE * (1 - f) * (t - v);
-          n[i] = v < 0 ? 0 : v > 1 ? 1 : v;
-        } else {
-          // Outside the influence zone: settle toward the attractor.
-          const v = s + RETURN_RATE * (t - s);
-          n[i] = v < 0 ? 0 : v > 1 ? 1 : v;
-        }
+        const inZone = pointerOn && (x - px) * (x - px) + dy * dy < r2;
+        // Inside the automaton, dots pop quickly between generations;
+        // outside, they drift gently home to the glyph.
+        const goal = inZone ? alive[i]! : target[i]!;
+        const rate = inZone ? snap : relax;
+        glow[i]! += rate * (goal - glow[i]!);
       }
     }
-
-    scratch = state;
-    state = n;
   }
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = ink;
-    const full = CELL * (1 - GAP_RATIO);
-    for (let y = 0; y < gh; y++) {
-      const row = y * gw;
-      const cy = y * CELL + CELL / 2;
-      for (let x = 0; x < gw; x++) {
-        const s = state[row + x]!;
-        if (s < MIN_DENSITY) continue;
-        // Quantize sqrt(density) into discrete sizes — cells visibly step
-        // between levels instead of fading, which sells the grid.
-        const q = Math.ceil(Math.sqrt(s) * SIZE_LEVELS) / SIZE_LEVELS;
-        const size = full * q;
-        ctx.fillRect(x * CELL + (CELL - size) / 2, cy - size / 2, size, size);
-      }
+    if (panel) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.drawImage(panel, 0, 0);
+      ctx.restore();
     }
+    ctx.fillStyle = ink;
+    // Batch lit dots by quantized brightness to limit globalAlpha changes.
+    for (let level = 1; level <= GLOW_LEVELS; level++) {
+      ctx.globalAlpha = level / GLOW_LEVELS;
+      ctx.beginPath();
+      for (let y = 0; y < gh; y++) {
+        const row = y * gw;
+        const cy = y * CELL + CELL / 2;
+        for (let x = 0; x < gw; x++) {
+          const g = glow[row + x]!;
+          if (g < MIN_DRAW) continue;
+          const q = Math.min(GLOW_LEVELS, Math.max(1, Math.round(g * GLOW_LEVELS)));
+          if (q !== level) continue;
+          const cx = x * CELL + CELL / 2;
+          ctx.moveTo(cx + DOT_RADIUS, cy);
+          ctx.arc(cx, cy, DOT_RADIUS, 0, Math.PI * 2);
+        }
+      }
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
   }
 
   function frame(now: number) {
     if (!running) return;
     raf = requestAnimationFrame(frame);
-    acc = Math.min(acc + (now - last), 100); // cap catch-up after tab switches
-    last = now;
-    let did = false;
-    while (acc >= STEP) {
-      step();
-      acc -= STEP;
-      did = true;
+    const dt = Math.min(now - lastFrame, 100); // cap catch-up after tab switch
+    lastFrame = now;
+
+    // The automaton ticks at CA_HZ; brightness eases every frame.
+    genAcc += dt;
+    const genMs = 1000 / CA_HZ;
+    while (genAcc >= genMs) {
+      generation();
+      genAcc -= genMs;
     }
-    if (did) draw();
+    settle(dt);
+    draw();
   }
 
   function start() {
     if (running || !inView || !live) return;
     running = true;
-    last = performance.now();
-    acc = STEP;
+    lastFrame = performance.now();
+    genAcc = 0;
     raf = requestAnimationFrame(frame);
   }
 
@@ -256,10 +329,14 @@ const { text } = Astro.props;
       }, 160);
     }).observe(root);
 
-    // Follow theme switches.
+    // Follow theme switches (re-ink the panel too).
     new MutationObserver(() => {
       readInk();
-      if (live) draw();
+      if (live) {
+        const rect = root.getBoundingClientRect();
+        buildPanel(rect.width, rect.height, Math.min(devicePixelRatio || 1, 2));
+        draw();
+      }
     }).observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["data-mode"],
