@@ -1,46 +1,46 @@
 ---
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import PostCard from "@/components/PostCard.astro";
-import Pagination from "@/components/Pagination.astro";
-import { POSTS_PER_PAGE } from "@/consts";
-import { isPublished, slugifyTag, sortPostsNewestFirst } from "@/utils";
+import Shell from "~/layouts/Shell.astro";
+import PostRow from "~/components/PostRow.astro";
+import Pager from "~/components/Pager.astro";
+import { SITE } from "~/site";
+import { byNewest, published, tagSlug } from "~/lib";
 
 export const getStaticPaths = (async ({ paginate }) => {
-  const posts = sortPostsNewestFirst(await getCollection("blog", isPublished));
-  return paginate(posts, { pageSize: POSTS_PER_PAGE });
+  const posts = byNewest(await getCollection("blog", published));
+  return paginate(posts, { pageSize: SITE.postsPerPage });
 }) satisfies GetStaticPaths;
 
 const { page } = Astro.props;
-
-const allTags = [
+const tags = [
   ...new Set(
-    (await getCollection("blog", isPublished)).flatMap((p) => p.data.tags),
+    (await getCollection("blog", published)).flatMap((p) => p.data.tags),
   ),
 ].sort();
 ---
 
-<BaseLayout
+<Shell
   title="Blog"
-  description="Writing on embedded systems, 3D printing, video, and whatever's on the bench."
+  description="Build logs and field notes — embedded systems, fabrication, photography gear, and the web."
 >
-  <div class="container container--narrow">
-    <header class="page-header">
+  <div class="wrap wrap-text">
+    <header class="page-head">
+      <span class="kicker">Writing</span>
       <h1>Blog</h1>
-      <p>
-        Notes from the bench — embedded systems, fabrication, and the
-        occasional detour.
+      <p class="lede">
+        Build logs and field notes. Mostly things I wish I'd found on someone
+        else's site before I started.
       </p>
     </header>
 
     {
-      allTags.length > 0 && (
-        <nav class="tag-nav" aria-label="Filter by tag">
-          <ul>
-            {allTags.map((tag) => (
+      tags.length > 0 && (
+        <nav aria-label="Browse by tag">
+          <ul class="tag-row">
+            {tags.map((tag) => (
               <li>
-                <a class="tag" href={`/blog/tags/${slugifyTag(tag)}/`}>
+                <a class="tag" href={`/blog/tags/${tagSlug(tag)}/`}>
                   {tag}
                 </a>
               </li>
@@ -50,16 +50,25 @@ const allTags = [
       )
     }
 
-    <div class="post-list">
-      {page.data.map((post) => <PostCard post={post} />)}
+    <div class="rows">
+      {page.data.map((post) => <PostRow post={post} />)}
     </div>
 
-    <Pagination
-      prevUrl={page.url.prev}
-      nextUrl={page.url.next}
-      current={page.currentPage}
-      total={page.lastPage}
+    <Pager
+      prev={page.url.prev}
+      next={page.url.next}
+      page={page.currentPage}
+      pages={page.lastPage}
     />
   </div>
-</BaseLayout>
+</Shell>
 
+<style>
+  nav {
+    margin-bottom: 1.25rem;
+  }
+
+  .rows > :global(* + *) {
+    border-top: 1px solid var(--line);
+  }
+</style>

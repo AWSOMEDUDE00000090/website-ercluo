@@ -2,11 +2,11 @@
 import type { GetStaticPaths } from "astro";
 import { getCollection, render } from "astro:content";
 import { Image } from "astro:assets";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import { isPublished, slugifyTag } from "@/utils";
+import Shell from "~/layouts/Shell.astro";
+import { published, tagSlug } from "~/lib";
 
 export const getStaticPaths = (async () => {
-  const projects = await getCollection("projects", isPublished);
+  const projects = await getCollection("projects", published);
   return projects.map((project) => ({
     params: { id: project.id },
     props: { project },
@@ -15,39 +15,39 @@ export const getStaticPaths = (async () => {
 
 const { project } = Astro.props;
 const { Content } = await render(project);
-const { title, summary, period, tech, role, links, coverImage, coverImageAlt, gallery } =
-  project.data;
+const d = project.data;
 
-const linkEntries = [
-  { key: "repo", label: "Source" },
-  { key: "live", label: "Live site" },
-  { key: "demo", label: "Demo" },
-  { key: "video", label: "Video" },
-]
-  .map(({ key, label }) => ({
-    label,
-    href: links?.[key as keyof typeof links],
-  }))
-  .filter((l): l is { label: string; href: string } => Boolean(l.href));
+const LINK_LABELS = {
+  repo: "Source",
+  live: "Live",
+  demo: "Demo",
+  video: "Video",
+} as const;
+const links = (Object.keys(LINK_LABELS) as (keyof typeof LINK_LABELS)[])
+  .filter((k) => d.links[k])
+  .map((k) => ({ label: LINK_LABELS[k], href: d.links[k]! }));
 ---
 
-<BaseLayout
-  title={title}
-  description={summary}
-  ogType="article"
-  image={coverImage?.src}
+<Shell
+  title={d.title}
+  description={d.summary}
+  article
+  image={d.coverImage?.src}
 >
-  <article class="container container--narrow">
-    <header class="page-header">
-      <p class="eyebrow">{period}{role && ` · ${role}`}</p>
-      <h1>{title}</h1>
-      <p>{summary}</p>
+  <article class="wrap wrap-text">
+    <header class="page-head">
+      <p class="meta">
+        <span>{d.period}</span>
+        {d.role && <span>· {d.role}</span>}
+      </p>
+      <h1>{d.title}</h1>
+      <p class="lede">{d.summary}</p>
       {
-        tech.length > 0 && (
-          <ul class="tag-list" aria-label="Technologies">
-            {tech.map((t) => (
+        d.tech.length > 0 && (
+          <ul class="tag-row" aria-label="Technologies">
+            {d.tech.map((t) => (
               <li>
-                <a class="tag" href={`/projects/tech/${slugifyTag(t)}/`}>
+                <a class="tag" href={`/projects/tech/${tagSlug(t)}/`}>
                   {t}
                 </a>
               </li>
@@ -56,33 +56,21 @@ const linkEntries = [
         )
       }
       {
-        linkEntries.length > 0 && (
-          <ul class="link-list" aria-label="Project links">
-            {linkEntries.map(({ label, href }) => (
-              <li>
-                <a
-                  class="button"
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {label} ↗
-                </a>
-              </li>
+        links.length > 0 && (
+          <p class="links">
+            {links.map(({ label, href }) => (
+              <a class="btn" href={href} target="_blank" rel="noopener noreferrer">
+                {label} ↗
+              </a>
             ))}
-          </ul>
+          </p>
         )
       }
     </header>
 
     {
-      coverImage && (
-        <Image
-          src={coverImage}
-          alt={coverImageAlt ?? ""}
-          width={1400}
-          class="cover-image"
-        />
+      d.coverImage && (
+        <Image class="cover" src={d.coverImage} alt={d.coverImageAlt} width={1360} />
       )
     }
 
@@ -91,11 +79,13 @@ const linkEntries = [
     </div>
 
     {
-      gallery && gallery.length > 0 && (
+      d.gallery.length > 0 && (
         <section class="gallery" aria-label="Gallery">
-          <h2>Gallery</h2>
-          <div class="gallery-grid">
-            {gallery.map(({ src, alt }) => (
+          <header class="rule-head">
+            <span class="kicker">Gallery</span>
+          </header>
+          <div class="grid">
+            {d.gallery.map(({ src, alt }) => (
               <Image src={src} alt={alt} width={800} />
             ))}
           </div>
@@ -103,57 +93,63 @@ const linkEntries = [
       )
     }
 
-    <p class="back-link"><a href="/projects/">← Back to projects</a></p>
+    <p class="back"><a href="/projects/">← Back to projects</a></p>
   </article>
-</BaseLayout>
+</Shell>
 
 <style>
-  .tag-list,
-  .link-list {
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--size-0);
+    color: var(--ink-2);
+    margin-bottom: 0.4rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .page-head .tag-row {
+    margin-top: 1.1rem;
+  }
+
+  .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    list-style: none;
-    padding: 0;
-    margin-top: 1rem;
-  }
-
-  .link-list {
-    margin-top: 1.25rem;
     gap: 0.75rem;
+    margin-top: 1.4rem;
   }
 
-  .cover-image {
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+  .cover {
+    border: 1px solid var(--line);
     margin-bottom: 2.5rem;
   }
 
   .gallery {
-    margin-top: 3.5rem;
+    margin-top: 4rem;
   }
 
-  .gallery h2 {
-    font-size: var(--text-xl);
-    margin-bottom: 1.25rem;
-  }
-
-  .gallery-grid {
+  .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
     gap: 1rem;
   }
 
-  .gallery-grid img {
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
+  .grid img {
+    border: 1px solid var(--line);
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .back-link {
+  .back {
     margin-top: 3rem;
-    font-size: var(--text-sm);
+    font-size: var(--size-1);
+  }
+
+  .back a {
+    color: var(--ink-2);
+  }
+
+  .back a:hover {
+    color: var(--copper);
   }
 </style>

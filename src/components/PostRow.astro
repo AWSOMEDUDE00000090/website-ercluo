@@ -1,0 +1,80 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { fmtDate, minutesToRead } from "~/lib";
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+---
+
+<article class="row">
+  <div class="when">
+    <time datetime={post.data.pubDate.toISOString()}>
+      {fmtDate(post.data.pubDate)}
+    </time>
+    <span class="mins">{minutesToRead(post.body)}</span>
+  </div>
+  <div class="what">
+    <h3><a href={`/blog/${post.id}/`}>{post.data.title}</a></h3>
+    <p>{post.data.description}</p>
+    {
+      post.data.tags.length > 0 && (
+        <p class="tags">{post.data.tags.join(" · ")}</p>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .row {
+    display: grid;
+    grid-template-columns: 11rem 1fr;
+    gap: 1.5rem;
+    padding-block: 1.6rem;
+  }
+
+  @media (max-width: 40rem) {
+    .row {
+      grid-template-columns: 1fr;
+      gap: 0.4rem;
+    }
+  }
+
+  .when {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-family: var(--font-mono);
+    font-size: var(--size-0);
+    color: var(--ink-2);
+  }
+
+  @media (max-width: 40rem) {
+    .when {
+      flex-direction: row;
+      gap: 0.75rem;
+    }
+  }
+
+  h3 {
+    font-size: var(--size-3);
+  }
+
+  h3 a:hover {
+    color: var(--copper);
+  }
+
+  .what p {
+    margin-top: 0.4rem;
+    color: var(--ink-2);
+    font-size: var(--size-1);
+    max-width: 58ch;
+  }
+
+  .tags {
+    font-family: var(--font-mono);
+    font-size: var(--size-0) !important;
+  }
+</style>

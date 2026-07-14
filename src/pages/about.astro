@@ -1,29 +1,29 @@
 ---
 import { getEntry, render } from "astro:content";
-import BaseLayout from "@/layouts/BaseLayout.astro";
+import Shell from "~/layouts/Shell.astro";
 
-// The About page body lives in src/content/pages/about.md — edit it there.
+// Body lives in src/content/pages/about.md — that's the file to edit.
 const about = await getEntry("pages", "about");
-if (!about) throw new Error("Missing src/content/pages/about.md");
+if (!about) throw new Error("src/content/pages/about.md is missing");
 const { Content } = await render(about);
 ---
 
-<BaseLayout title={about.data.title} description={about.data.description}>
-  <div class="container container--narrow">
-    <header class="page-header">
+<Shell title={about.data.title} description={about.data.description}>
+  <div class="wrap wrap-text">
+    <header class="page-head">
+      <span class="kicker">Person</span>
       <h1>{about.data.title}</h1>
     </header>
-    <div class="prose about-prose">
+    <div class="prose about">
       <Content />
     </div>
   </div>
-</BaseLayout>
+</Shell>
 
 <style>
-  /* The first image in the About body is the portrait — keep it modest. */
-  .about-prose :global(> p:first-child img) {
-    max-width: min(260px, 60%);
-    border-radius: var(--radius-lg);
+  /* First image in the body = portrait slot; keep it portrait-sized. */
+  .about :global(> p:first-of-type img) {
+    max-width: min(280px, 65%);
     margin-inline: 0;
   }
 </style>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="900" viewBox="0 0 720 900" font-family="Menlo, monospace">
+  <rect width="720" height="900" fill="#edeae3"/>
+  <g fill="none" stroke="#b8b2a5" stroke-width="6">
+    <circle cx="360" cy="330" r="120"/>
+    <path d="M140 780 C 140 620, 580 620, 580 780"/>
+  </g>
+  <g stroke="#b8b2a5" stroke-width="2">
+    <path d="M40 40 H100 M40 40 V100 M680 40 H620 M680 40 V100 M40 860 H100 M40 860 V800 M680 860 H620 M680 860 V800"/>
+  </g>
+  <text x="360" y="845" text-anchor="middle" font-size="26" fill="#6e675e">PORTRAIT SLOT — REPLACE</text>
+</svg>

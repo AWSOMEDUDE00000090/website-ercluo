@@ -1,0 +1,81 @@
+---
+import ModeToggle from "./ModeToggle.astro";
+
+const nav = [
+  { href: "/projects/", label: "Projects" },
+  { href: "/blog/", label: "Blog" },
+  { href: "/about/", label: "About" },
+];
+const path = Astro.url.pathname;
+---
+
+<header>
+  <div class="wrap bar">
+    <a class="mark" href="/">Eric<span aria-hidden="true">&nbsp;/</span>Luo</a>
+    <nav aria-label="Site">
+      <ul>
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                aria-current={path.startsWith(item.href) ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <ModeToggle />
+  </div>
+</header>
+
+<style>
+  header {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    height: 3.5rem;
+  }
+
+  .mark {
+    font-family: var(--font-head);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-right: auto;
+  }
+
+  .mark span {
+    color: var(--copper);
+  }
+
+  ul {
+    display: flex;
+    gap: clamp(0.85rem, 2.5vw, 1.6rem);
+    list-style: none;
+    padding: 0;
+  }
+
+  nav a {
+    font-family: var(--font-head);
+    font-size: var(--size-1);
+    font-weight: 500;
+    color: var(--ink-2);
+    padding-block: 0.3rem;
+  }
+
+  nav a:hover {
+    color: var(--ink);
+  }
+
+  nav a[aria-current="page"] {
+    color: var(--ink);
+    border-bottom: 2px solid var(--copper);
+  }
+</style>

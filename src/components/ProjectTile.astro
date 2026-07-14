@@ -1,0 +1,102 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { Image } from "astro:assets";
+
+interface Props {
+  project: CollectionEntry<"projects">;
+}
+
+const { project } = Astro.props;
+const d = project.data;
+---
+
+<article class="tile">
+  <a class="hit" href={`/projects/${project.id}/`}>
+    {
+      d.coverImage && (
+        <div class="cover">
+          <Image src={d.coverImage} alt={d.coverImageAlt} width={840} />
+        </div>
+      )
+    }
+    <div class="meta">
+      <span>{d.period}</span>
+      {d.featured && <span class="star" title="Featured">★</span>}
+    </div>
+    <h3>{d.title}</h3>
+    <p>{d.summary}</p>
+  </a>
+  {
+    d.tech.length > 0 && (
+      <p class="tech" aria-label="Technologies">
+        {d.tech.join(" / ")}
+      </p>
+    )
+  }
+</article>
+
+<style>
+  .tile {
+    border-top: 1px solid var(--line-2);
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 140ms var(--ease);
+  }
+
+  .tile:hover {
+    border-top-color: var(--copper);
+  }
+
+  .hit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .cover {
+    border: 1px solid var(--line);
+    background: var(--well);
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+  }
+
+  .cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: var(--size-0);
+    color: var(--ink-2);
+  }
+
+  .star {
+    color: var(--copper);
+  }
+
+  h3 {
+    font-size: var(--size-3);
+  }
+
+  .hit:hover h3 {
+    color: var(--copper);
+  }
+
+  .hit > p {
+    color: var(--ink-2);
+    font-size: var(--size-1);
+  }
+
+  .tech {
+    margin-top: 0.75rem;
+    font-family: var(--font-mono);
+    font-size: var(--size-0);
+    color: var(--ink-2);
+  }
+</style>

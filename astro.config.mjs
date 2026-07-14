@@ -7,13 +7,14 @@ import sitemap from "@astrojs/sitemap";
 export default defineConfig({
   site: "https://ercluo.com",
   output: "static",
+  trailingSlash: "ignore",
   integrations: [mdx(), sitemap()],
   markdown: {
     shikiConfig: {
-      // One theme per color scheme; CSS variables switch between them.
+      // Dual themes; global.css maps the dark one onto [data-mode="dark"].
       themes: {
-        light: "github-light",
-        dark: "github-dark",
+        light: "vitesse-light",
+        dark: "vitesse-dark",
       },
     },
   },

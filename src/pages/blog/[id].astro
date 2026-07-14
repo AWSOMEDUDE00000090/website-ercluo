@@ -2,56 +2,49 @@
 import type { GetStaticPaths } from "astro";
 import { getCollection, render } from "astro:content";
 import { Image } from "astro:assets";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import FormattedDate from "@/components/FormattedDate.astro";
-import { isPublished, readingTime, slugifyTag, sortPostsNewestFirst } from "@/utils";
+import Shell from "~/layouts/Shell.astro";
+import { byNewest, fmtDate, minutesToRead, published, tagSlug } from "~/lib";
 
 export const getStaticPaths = (async () => {
-  const posts = sortPostsNewestFirst(await getCollection("blog", isPublished));
+  const posts = byNewest(await getCollection("blog", published));
   return posts.map((post, i) => ({
     params: { id: post.id },
-    props: {
-      post,
-      // posts are newest-first: "newer" is the previous index
-      newer: posts[i - 1],
-      older: posts[i + 1],
-    },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
   }));
 }) satisfies GetStaticPaths;
 
 const { post, newer, older } = Astro.props;
 const { Content } = await render(post);
-const { title, description, pubDate, updatedDate, tags, heroImage, heroImageAlt } =
-  post.data;
+const d = post.data;
 ---
 
-<BaseLayout
-  title={title}
-  description={description}
-  ogType="article"
-  image={heroImage?.src}
+<Shell
+  title={d.title}
+  description={d.description}
+  article
+  image={d.heroImage?.src}
 >
-  <article class="container container--narrow">
-    <header class="page-header">
-      <p class="post-meta">
-        <FormattedDate date={pubDate} />
-        <span aria-hidden="true">·</span>
-        <span>{readingTime(post.body)}</span>
+  <article class="wrap wrap-text">
+    <header class="page-head">
+      <p class="meta">
+        <time datetime={d.pubDate.toISOString()}>{fmtDate(d.pubDate)}</time>
+        <span>·</span>
+        <span>{minutesToRead(post.body)}</span>
         {
-          updatedDate && (
-            <span class="updated">
-              Updated <FormattedDate date={updatedDate} />
+          d.updatedDate && (
+            <span class="upd">
+              updated <time datetime={d.updatedDate.toISOString()}>{fmtDate(d.updatedDate)}</time>
             </span>
           )
         }
       </p>
-      <h1>{title}</h1>
+      <h1>{d.title}</h1>
       {
-        tags.length > 0 && (
-          <ul class="tag-list" aria-label="Tags">
-            {tags.map((tag) => (
+        d.tags.length > 0 && (
+          <ul class="tag-row" aria-label="Tags">
+            {d.tags.map((tag) => (
               <li>
-                <a class="tag" href={`/blog/tags/${slugifyTag(tag)}/`}>
+                <a class="tag" href={`/blog/tags/${tagSlug(tag)}/`}>
                   {tag}
                 </a>
               </li>
@@ -62,13 +55,8 @@ const { title, description, pubDate, updatedDate, tags, heroImage, heroImageAlt 
     </header>
 
     {
-      heroImage && (
-        <Image
-          src={heroImage}
-          alt={heroImageAlt ?? ""}
-          width={1400}
-          class="hero-image"
-        />
+      d.heroImage && (
+        <Image class="hero-img" src={d.heroImage} alt={d.heroImageAlt} width={1360} />
       )
     }
 
@@ -76,12 +64,12 @@ const { title, description, pubDate, updatedDate, tags, heroImage, heroImageAlt 
       <Content />
     </div>
 
-    <nav class="post-nav" aria-label="Adjacent posts">
+    <nav class="adjacent" aria-label="More posts">
       {
         older ? (
-          <a href={`/blog/${older.id}/`} class="post-nav-link">
-            <span class="eyebrow">← Older</span>
-            <span>{older.data.title}</span>
+          <a href={`/blog/${older.id}/`}>
+            <span class="kicker">← Older</span>
+            <span class="t">{older.data.title}</span>
           </a>
         ) : (
           <span />
@@ -89,9 +77,9 @@ const { title, description, pubDate, updatedDate, tags, heroImage, heroImageAlt 
       }
       {
         newer ? (
-          <a href={`/blog/${newer.id}/`} class="post-nav-link is-next">
-            <span class="eyebrow">Newer →</span>
-            <span>{newer.data.title}</span>
+          <a class="next" href={`/blog/${newer.id}/`}>
+            <span class="kicker">Newer →</span>
+            <span class="t">{newer.data.title}</span>
           </a>
         ) : (
           <span />
@@ -99,68 +87,73 @@ const { title, description, pubDate, updatedDate, tags, heroImage, heroImageAlt 
       }
     </nav>
 
-    <p class="back-link"><a href="/blog/">← Back to blog</a></p>
+    <p class="back"><a href="/blog/">← Back to blog</a></p>
   </article>
-</BaseLayout>
+</Shell>
 
 <style>
-  .post-meta {
+  .meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    margin-bottom: 0.75rem;
+    gap: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: var(--size-0);
+    color: var(--ink-2);
+    margin-bottom: 0.4rem;
   }
 
-  .updated {
+  .upd {
     font-style: italic;
   }
 
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    list-style: none;
-    padding: 0;
-    margin-top: 1rem;
+  .page-head .tag-row {
+    margin-top: 1.1rem;
   }
 
-  .hero-image {
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+  .hero-img {
+    border: 1px solid var(--line);
     margin-bottom: 2.5rem;
   }
 
-  .post-nav {
+  .adjacent {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
     margin-top: 4rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
   }
 
-  .post-nav-link {
+  .adjacent a {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    color: var(--text);
+    gap: 0.3rem;
+  }
+
+  .adjacent .t {
+    font-family: var(--font-head);
     font-weight: 500;
   }
 
-  .post-nav-link:hover {
-    color: var(--accent);
-    text-decoration: none;
+  .adjacent a:hover .t {
+    color: var(--copper);
   }
 
-  .post-nav-link.is-next {
+  .next {
     text-align: right;
     align-items: flex-end;
   }
 
-  .back-link {
+  .back {
     margin-top: 2.5rem;
-    font-size: var(--text-sm);
+    font-size: var(--size-1);
+  }
+
+  .back a {
+    color: var(--ink-2);
+  }
+
+  .back a:hover {
+    color: var(--copper);
   }
 </style>

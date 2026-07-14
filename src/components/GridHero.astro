@@ -1,0 +1,321 @@
+---
+// The signature hero. The heading is rasterized into a coarse grid; each
+// grid cell holds an ink "density" in [0,1]. Idle, every cell relaxes
+// toward the rasterized glyph pattern (a fixed attractor), so the type
+// reads crisp. Near the cursor, cells evolve by a dispersive CA rule —
+// diffusion into the four neighbors plus advection away from the pointer,
+// with a pinch of noise — so letters visibly break apart cell-by-cell and
+// re-form when the pointer leaves.
+//
+// Accessibility: the <h1> below is the real text. The canvas only takes
+// over when JS runs, layout exists, and the user allows motion.
+interface Props {
+  text: string;
+}
+
+const { text } = Astro.props;
+---
+
+<section class="grid-hero" id="grid-hero" data-text={text}>
+  <h1>{text}</h1>
+  <canvas aria-hidden="true"></canvas>
+</section>
+
+<script>
+  // ----- Tunables ---------------------------------------------------
+  const CELL = 6; // grid cell size, CSS px
+  const GAP_RATIO = 0.18; // fraction of the cell left empty around the square
+  const RADIUS = 150; // cursor influence radius, px
+  const DIFFUSION = 0.22; // neighbor exchange rate at full influence
+  const ADVECTION = 0.55; // outward push away from the cursor
+  const NOISE = 0.05; // stochastic churn inside the influence zone
+  const RETURN_RATE = 0.09; // relaxation toward the glyph attractor
+  const SIZE_LEVELS = 5; // quantized cell sizes (the "digital" look)
+  const MIN_DENSITY = 0.045; // below this a cell isn't drawn
+  const FONT = "600 REMpx 'Space Grotesk Variable', sans-serif"; // REM replaced at runtime
+  const WIDTH_FILL = 0.92; // max fraction of hero width the text may span
+  const HEIGHT_FILL = 0.6; // …and of its height
+  const STEP = 1000 / 60; // fixed simulation timestep, ms
+
+  const root = document.getElementById("grid-hero")!;
+  const canvas = root.querySelector("canvas")!;
+  const ctx = canvas.getContext("2d")!;
+  const TEXT = root.dataset.text ?? "";
+
+  let gw = 0,
+    gh = 0;
+  let target = new Float32Array(0);
+  let state = new Float32Array(0);
+  let scratch = new Float32Array(0);
+
+  let ink = "#000";
+  let px = -1e9, // pointer position in grid units
+    py = -1e9;
+  let pointerOn = false;
+  let live = false; // canvas has taken over from the h1
+  let running = false;
+  let inView = true;
+  let raf = 0;
+  let last = 0;
+  let acc = 0;
+
+  const readInk = () => {
+    ink = getComputedStyle(document.documentElement)
+      .getPropertyValue("--ink")
+      .trim();
+  };
+
+  /** Rasterize TEXT into the target grid. False if the hero has no layout yet. */
+  function raster(): boolean {
+    const rect = root.getBoundingClientRect();
+    if (rect.width < 20 || rect.height < 20) return false;
+
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    gw = Math.floor(rect.width / CELL);
+    gh = Math.floor(rect.height / CELL);
+    target = new Float32Array(gw * gh);
+    state = new Float32Array(gw * gh);
+    scratch = new Float32Array(gw * gh);
+
+    const off = document.createElement("canvas");
+    off.width = gw;
+    off.height = gh;
+    const o = off.getContext("2d", { willReadFrequently: true })!;
+
+    // Measure at 100px, then scale to fit the fill box.
+    o.font = FONT.replace("REM", "100");
+    const m = o.measureText(TEXT);
+    const h100 = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent || 100;
+    const size =
+      100 *
+      Math.min((gw * WIDTH_FILL) / Math.max(m.width, 1), (gh * HEIGHT_FILL) / h100);
+    o.font = FONT.replace("REM", String(size));
+    o.textAlign = "center";
+    o.textBaseline = "middle";
+    o.fillStyle = "#fff";
+    o.fillText(TEXT, gw / 2, gh / 2);
+
+    const data = o.getImageData(0, 0, gw, gh).data;
+    for (let i = 0; i < target.length; i++) target[i] = data[i * 4 + 3]! / 255;
+    state.set(target);
+    return true;
+  }
+
+  /** One CA step: diffusion + outward advection near the cursor, relaxation home elsewhere. */
+  function step() {
+    const r = RADIUS / CELL;
+    const r2 = r * r;
+    const n = scratch;
+    n.set(state);
+
+    for (let y = 0; y < gh; y++) {
+      const dy = y - py;
+      const rowUp = (y > 0 ? y - 1 : 0) * gw;
+      const rowDn = (y < gh - 1 ? y + 1 : gh - 1) * gw;
+      const row = y * gw;
+      for (let x = 0; x < gw; x++) {
+        const i = row + x;
+        const dx = x - px;
+        const d2 = dx * dx + dy * dy;
+        const s = state[i]!;
+        const t = target[i]!;
+
+        if (pointerOn && d2 < r2) {
+          const dist = Math.sqrt(d2) || 1;
+          const f = (1 - dist / r) ** 2; // smooth falloff, 1 at cursor
+
+          // Diffusion: exchange with the 4-neighborhood (clamped edges).
+          const l = state[row + (x > 0 ? x - 1 : 0)]!;
+          const rt = state[row + (x < gw - 1 ? x + 1 : gw - 1)]!;
+          const u = state[rowUp + x]!;
+          const dn = state[rowDn + x]!;
+          const avg = (l + rt + u + dn) / 4;
+          let v = s + DIFFUSION * f * (avg - s);
+
+          // Advection: pull density from the cell one step closer to the
+          // cursor, so ink streams radially outward from the pointer.
+          const ux = Math.round(dx / dist);
+          const uy = Math.round(dy / dist);
+          const sx = Math.min(gw - 1, Math.max(0, x - ux));
+          const sy = Math.min(gh - 1, Math.max(0, y - uy));
+          v += ADVECTION * f * (state[sy * gw + sx]! - s);
+
+          // Noise: stochastic churn so the region reads as automata, not blur.
+          v += NOISE * f * (Math.random() - 0.5);
+
+          // Weak pull home keeps total ink from bleaching out entirely.
+          v += RETURN_RATE * (1 - f) * (t - v);
+          n[i] = v < 0 ? 0 : v > 1 ? 1 : v;
+        } else {
+          // Outside the influence zone: settle toward the attractor.
+          const v = s + RETURN_RATE * (t - s);
+          n[i] = v < 0 ? 0 : v > 1 ? 1 : v;
+        }
+      }
+    }
+
+    scratch = state;
+    state = n;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = ink;
+    const full = CELL * (1 - GAP_RATIO);
+    for (let y = 0; y < gh; y++) {
+      const row = y * gw;
+      const cy = y * CELL + CELL / 2;
+      for (let x = 0; x < gw; x++) {
+        const s = state[row + x]!;
+        if (s < MIN_DENSITY) continue;
+        // Quantize sqrt(density) into discrete sizes — cells visibly step
+        // between levels instead of fading, which sells the grid.
+        const q = Math.ceil(Math.sqrt(s) * SIZE_LEVELS) / SIZE_LEVELS;
+        const size = full * q;
+        ctx.fillRect(x * CELL + (CELL - size) / 2, cy - size / 2, size, size);
+      }
+    }
+  }
+
+  function frame(now: number) {
+    if (!running) return;
+    raf = requestAnimationFrame(frame);
+    acc = Math.min(acc + (now - last), 100); // cap catch-up after tab switches
+    last = now;
+    let did = false;
+    while (acc >= STEP) {
+      step();
+      acc -= STEP;
+      did = true;
+    }
+    if (did) draw();
+  }
+
+  function start() {
+    if (running || !inView || !live) return;
+    running = true;
+    last = performance.now();
+    acc = STEP;
+    raf = requestAnimationFrame(frame);
+  }
+
+  function stop() {
+    running = false;
+    cancelAnimationFrame(raf);
+  }
+
+  /** Take over from the static h1 once we can actually rasterize. */
+  function goLive() {
+    if (live || !raster()) return;
+    readInk();
+    draw(); // paint before hiding the text — never show a blank hero
+    root.classList.add("live");
+    live = true;
+    start();
+  }
+
+  function init() {
+    const motionOK = matchMedia("(prefers-reduced-motion: no-preference)");
+
+    const onMove = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      px = (e.clientX - rect.left) / CELL;
+      py = (e.clientY - rect.top) / CELL;
+      pointerOn = true;
+    };
+    const onLeave = () => {
+      pointerOn = false;
+    };
+
+    root.addEventListener("pointermove", onMove, { passive: true });
+    root.addEventListener("pointerdown", onMove, { passive: true });
+    root.addEventListener("pointerleave", onLeave);
+    root.addEventListener("pointercancel", onLeave);
+    root.addEventListener("pointerup", (e) => {
+      if (e.pointerType !== "mouse") onLeave(); // finger lifted = disturbance ends
+    });
+
+    // Simulate only while on screen.
+    new IntersectionObserver(([entry]) => {
+      inView = entry?.isIntersecting ?? true;
+      inView ? start() : stop();
+    }).observe(root);
+
+    // Re-rasterize when the hero resizes; first successful layout also
+    // activates the canvas if the page loaded hidden or squeezed.
+    let timer = 0;
+    new ResizeObserver(() => {
+      clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        if (!live) return void goLive();
+        if (raster()) draw();
+      }, 160);
+    }).observe(root);
+
+    // Follow theme switches.
+    new MutationObserver(() => {
+      readInk();
+      if (live) draw();
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-mode"],
+    });
+
+    // Honor reduced motion, both now and if it changes mid-visit.
+    const applyMotion = () => {
+      if (motionOK.matches) {
+        document.fonts.ready.then(goLive);
+      } else {
+        stop();
+        root.classList.remove("live");
+        live = false;
+      }
+    };
+    motionOK.addEventListener("change", applyMotion);
+    applyMotion();
+  }
+
+  init();
+</script>
+
+<style>
+  .grid-hero {
+    position: relative;
+    height: clamp(280px, 46vh, 480px);
+    border-bottom: 1px solid var(--line);
+    touch-action: pan-y; /* don't hijack scrolling on touch */
+  }
+
+  h1 {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    font-size: clamp(2.75rem, 10.5vw, 7rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding-inline: var(--gutter);
+  }
+
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+  }
+
+  /* Canvas owns the pixels; the h1 stays for AT and crawlers. */
+  .grid-hero.live h1 {
+    opacity: 0;
+  }
+
+  .grid-hero.live canvas {
+    display: block;
+  }
+</style>

@@ -1,0 +1,39 @@
+---
+interface Props {
+  prev?: string;
+  next?: string;
+  page: number;
+  pages: number;
+}
+
+const { prev, next, page, pages } = Astro.props;
+---
+
+{
+  pages > 1 && (
+    <nav class="pager" aria-label="Pages">
+      {prev ? <a class="btn" href={prev}>← Newer</a> : <span />}
+      <span class="where">
+        {page} / {pages}
+      </span>
+      {next ? <a class="btn" href={next}>Older →</a> : <span />}
+    </nav>
+  )
+}
+
+<style>
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 3rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+  }
+
+  .where {
+    font-family: var(--font-mono);
+    font-size: var(--size-0);
+    color: var(--ink-2);
+  }
+</style>

@@ -1,0 +1,55 @@
+---
+import { LINKS, SITE } from "~/site";
+---
+
+<footer>
+  <div class="wrap inner">
+    <p>© {new Date().getFullYear()} {SITE.name}</p>
+    <ul>
+      {
+        LINKS.map(({ label, href }) => (
+          <li>
+            <a
+              href={href}
+              {...href.startsWith("http")
+                ? { target: "_blank", rel: "noopener noreferrer" }
+                : {}}
+            >
+              {label}
+            </a>
+          </li>
+        ))
+      }
+      <li><a href="/rss.xml">RSS</a></li>
+    </ul>
+  </div>
+</footer>
+
+<style>
+  footer {
+    border-top: 1px solid var(--line);
+    margin-top: 6rem;
+  }
+
+  .inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    justify-content: space-between;
+    padding-block: 1.75rem;
+    font-size: var(--size-0);
+    color: var(--ink-2);
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.4rem;
+    list-style: none;
+    padding: 0;
+  }
+
+  a:hover {
+    color: var(--copper);
+  }
+</style>

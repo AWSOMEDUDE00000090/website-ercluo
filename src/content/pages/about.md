@@ -1,38 +1,42 @@
 ---
 title: "About"
-description: "Eric Luo — computer engineering student and maker. Embedded systems, 3D printing, video, and the web."
+description: "Eric Luo — computer engineering student in Washington. Embedded systems, digital fabrication, photography, and careful web pages."
 ---
 
-![Photo of Eric Luo](../../assets/portrait-placeholder.svg)
+![Portrait of Eric Luo](../../assets/portrait.svg)
 
-Hi — I'm Eric. I'm a computer engineering student in Washington, and I like
-building things where I can see the whole stack: the silicon, the firmware,
-the enclosure, and the story about how it came together.
+I'm Eric — a computer engineering student in Washington. The through-line
+in everything I make is wanting to know what's actually happening one
+layer down: what the compiler emitted, why the print warped, where the
+light went.
 
-That means my bench usually has a few things going at once — a breadboard
-computer that needs one more control line, a 3D print cooling next to the
-calipers, a receipt printer that's become a group-chat appliance. I care
-about material detail the way some people care about benchmarks: the
-texture of a well-worn selvedge, the click of a good keyswitch, the layer
-lines on a print you sanded anyway.
+I keep a small fleet of ongoing builds — a discrete-logic CPU, a receipt
+printer that answers to the local network, a drawer of 3D-printed tools
+that each replaced something I almost bought. I photograph and film the
+process, partly to share it and partly because a camera is a merciless
+reviewer: it finds every cold joint and every sloppy chamfer.
 
-I also shoot and edit video, which turns out to be the same discipline as
-engineering — light is just another signal you route, shape, and debug.
+Good objects matter to me — the kind with provenance, where you can tell
+someone chose the stitch density or the switch weight on purpose. This
+site is my attempt to hold web pages to the same standard.
 
 ## Toolbox
 
-- **Embedded:** C/C++, ESP32, AVR, PlatformIO, logic analyzers, too many breadboards
-- **Fabrication:** Fusion 360, FDM printing, hand finishing
-- **Video & lighting:** Premiere, speedlights, DIY light modifiers
-- **Web:** TypeScript, Astro, plain CSS done carefully
+| Domain | Daily drivers |
+| ------ | ------------- |
+| Embedded | C/C++, ESP32, AVR, PlatformIO, saleae + scope |
+| Fabrication | Fusion 360, FDM printers, deburring tool I'd rescue from a fire |
+| Camera | Sony bodies, speedlights, DIY modifiers, Premiere |
+| Web | TypeScript, Astro, CSS written by hand |
 
-## Currently
+## Now
 
 - Studying computer engineering
-- Documenting builds here, one write-up at a time
-- Overthinking the kerning on this website
+- Writing up the backlog of builds, one post at a time
+- Trying to keep the parts bins under 100% capacity (failing)
 
-## Elsewhere
+## Papers & links
 
-Résumé: [download PDF](/resume.pdf) · Code: [GitHub](https://github.com/AWSOMEDUDE00000090) ·
-Email: [eluo2007@gmail.com](mailto:eluo2007@gmail.com)
+[Résumé (PDF)](/resume.pdf) — placeholder until the real one lands.
+Find me on [GitHub](https://github.com/AWSOMEDUDE00000090) or say hi at
+[eluo2007@gmail.com](mailto:eluo2007@gmail.com).

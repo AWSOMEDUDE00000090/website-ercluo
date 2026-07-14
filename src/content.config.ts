@@ -11,7 +11,7 @@ const blog = defineCollection({
       updatedDate: z.coerce.date().optional(),
       tags: z.array(z.string()).default([]),
       heroImage: image().optional(),
-      heroImageAlt: z.string().optional(),
+      heroImageAlt: z.string().default(""),
       draft: z.boolean().default(false),
     }),
 });
@@ -22,9 +22,9 @@ const projects = defineCollection({
     z.object({
       title: z.string(),
       summary: z.string(),
-      // Human-readable period ("2024", "Jan–Mar 2025") shown on cards…
+      /** Shown on cards ("2025", "Jan–Mar 2026"). */
       period: z.string(),
-      // …and a machine-sortable date used to order the grid.
+      /** Machine-sortable; used to order the grid. */
       date: z.coerce.date(),
       tech: z.array(z.string()).default([]),
       role: z.string().optional(),
@@ -35,20 +35,19 @@ const projects = defineCollection({
           demo: z.string().url().optional(),
           video: z.string().url().optional(),
         })
-        .optional(),
+        .default({}),
       coverImage: image().optional(),
-      coverImageAlt: z.string().optional(),
-      gallery: z
-        .array(z.object({ src: image(), alt: z.string() }))
-        .optional(),
+      coverImageAlt: z.string().default(""),
+      gallery: z.array(z.object({ src: image(), alt: z.string() })).default([]),
       featured: z.boolean().default(false),
       order: z.number().optional(),
       draft: z.boolean().default(false),
     }),
 });
 
+/** Single-file pages (about) that should be editable as markdown. */
 const pages = defineCollection({
-  loader: glob({ base: "./src/content/pages", pattern: "**/*.{md,mdx}" }),
+  loader: glob({ base: "./src/content/pages", pattern: "*.{md,mdx}" }),
   schema: z.object({
     title: z.string(),
     description: z.string(),

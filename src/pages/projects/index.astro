@@ -1,38 +1,37 @@
 ---
 import { getCollection } from "astro:content";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import ProjectCard from "@/components/ProjectCard.astro";
-import { isPublished, slugifyTag, sortProjects } from "@/utils";
+import Shell from "~/layouts/Shell.astro";
+import ProjectTile from "~/components/ProjectTile.astro";
+import { byProjectRank, published, tagSlug } from "~/lib";
 
-const projects = sortProjects(await getCollection("projects", isPublished));
-const allTech = [...new Set(projects.flatMap((p) => p.data.tech))].sort();
+const projects = byProjectRank(await getCollection("projects", published));
+const techs = [...new Set(projects.flatMap((p) => p.data.tech))].sort();
 ---
 
-<BaseLayout
+<Shell
   title="Projects"
-  description="Hardware and software builds — embedded systems, 3D printing, and the tools around them."
+  description="Hardware and software builds, documented: embedded systems, 3D-printed tools, and the glue between them."
 >
-  <div class="container">
-    <header class="page-header">
+  <div class="wrap">
+    <header class="page-head">
+      <span class="kicker">Work</span>
       <h1>Projects</h1>
-      <p>
-        Things I've designed, soldered, printed, or programmed. Most have a
-        full write-up.
+      <p class="lede">
+        Built, broken, rebuilt, and written up. The write-ups include the
+        mistakes — that's usually the useful part.
       </p>
     </header>
 
     {
-      allTech.length > 0 && (
-        <nav class="tag-nav" aria-label="Filter by technology">
-          <ul>
+      techs.length > 0 && (
+        <nav aria-label="Filter by technology">
+          <ul class="tag-row">
             <li>
-              <a class="tag" aria-current="true" href="/projects/">
-                All
-              </a>
+              <span class="tag is-on">All</span>
             </li>
-            {allTech.map((tech) => (
+            {techs.map((tech) => (
               <li>
-                <a class="tag" href={`/projects/tech/${slugifyTag(tech)}/`}>
+                <a class="tag" href={`/projects/tech/${tagSlug(tech)}/`}>
                   {tech}
                 </a>
               </li>
@@ -42,8 +41,20 @@ const allTech = [...new Set(projects.flatMap((p) => p.data.tech))].sort();
       )
     }
 
-    <div class="project-grid">
-      {projects.map((project) => <ProjectCard project={project} />)}
+    <div class="tiles">
+      {projects.map((project) => <ProjectTile project={project} />)}
     </div>
   </div>
-</BaseLayout>
+</Shell>
+
+<style>
+  nav {
+    margin-bottom: 2rem;
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 2rem;
+  }
+</style>

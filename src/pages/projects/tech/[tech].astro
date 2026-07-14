@@ -1,41 +1,50 @@
 ---
 import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import ProjectCard from "@/components/ProjectCard.astro";
-import { isPublished, slugifyTag, sortProjects } from "@/utils";
+import Shell from "~/layouts/Shell.astro";
+import ProjectTile from "~/components/ProjectTile.astro";
+import { byProjectRank, published, tagSlug } from "~/lib";
 
 export const getStaticPaths = (async () => {
-  const projects = sortProjects(await getCollection("projects", isPublished));
+  const projects = byProjectRank(await getCollection("projects", published));
   const techs = [...new Set(projects.flatMap((p) => p.data.tech))];
   return techs.map((tech) => ({
-    params: { tech: slugifyTag(tech) },
-    props: {
-      tech,
-      projects: projects.filter((p) => p.data.tech.includes(tech)),
-    },
+    params: { tech: tagSlug(tech) },
+    props: { tech, projects: projects.filter((p) => p.data.tech.includes(tech)) },
   }));
 }) satisfies GetStaticPaths;
 
 const { tech, projects } = Astro.props;
 ---
 
-<BaseLayout
-  title={`Projects using ${tech}`}
-  description={`Projects built with ${tech}.`}
->
-  <div class="container">
-    <header class="page-header">
-      <p class="eyebrow">Technology</p>
+<Shell title={`Projects: ${tech}`} description={`Projects built with ${tech}.`}>
+  <div class="wrap">
+    <header class="page-head">
+      <span class="kicker">Technology</span>
       <h1>{tech}</h1>
-      <p>
-        {projects.length} {projects.length === 1 ? "project" : "projects"} ·
+      <p class="lede">
+        {projects.length}
+        {projects.length === 1 ? "project" : "projects"} ·
         <a href="/projects/">all projects</a>
       </p>
     </header>
 
-    <div class="project-grid">
-      {projects.map((project) => <ProjectCard project={project} />)}
+    <div class="tiles">
+      {projects.map((project) => <ProjectTile project={project} />)}
     </div>
   </div>
-</BaseLayout>
+</Shell>
+
+<style>
+  .lede a {
+    color: var(--copper);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 2rem;
+  }
+</style>

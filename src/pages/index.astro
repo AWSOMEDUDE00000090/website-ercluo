@@ -1,94 +1,67 @@
 ---
 import { getCollection } from "astro:content";
-import BaseLayout from "@/layouts/BaseLayout.astro";
-import CAHero from "@/components/CAHero.astro";
-import ProjectCard from "@/components/ProjectCard.astro";
-import PostCard from "@/components/PostCard.astro";
-import { SITE_TITLE, SITE_TAGLINE, SITE_DESCRIPTION } from "@/consts";
-import { isPublished, sortPostsNewestFirst, sortProjects } from "@/utils";
+import Shell from "~/layouts/Shell.astro";
+import GridHero from "~/components/GridHero.astro";
+import ProjectTile from "~/components/ProjectTile.astro";
+import PostRow from "~/components/PostRow.astro";
+import { SITE } from "~/site";
+import { byNewest, byProjectRank, published } from "~/lib";
 
-const featuredProjects = sortProjects(
-  await getCollection("projects", (p) => isPublished(p) && p.data.featured),
+const featured = byProjectRank(
+  await getCollection("projects", (p) => published(p) && p.data.featured),
 ).slice(0, 3);
 
-const latestPosts = sortPostsNewestFirst(
-  await getCollection("blog", isPublished),
-).slice(0, 3);
+const recent = byNewest(await getCollection("blog", published)).slice(0, 3);
 ---
 
-<BaseLayout title={SITE_TITLE} description={SITE_DESCRIPTION}>
-  <CAHero text="Eric Luo" />
+<Shell title={SITE.name} description={SITE.description}>
+  <GridHero text={SITE.heroText} />
 
-  <div class="container">
-    <section class="intro">
-      <p>{SITE_TAGLINE}</p>
-      <div class="intro-links">
-        <a href="/projects/" class="button button--primary">See my projects</a>
-        <a href="/about/" class="button">About me</a>
+  <div class="wrap">
+    <p class="intro">{SITE.tagline}</p>
+
+    <section aria-labelledby="h-projects">
+      <header class="rule-head">
+        <span class="kicker" id="h-projects">Featured projects</span>
+        <a class="aside" href="/projects/">All projects →</a>
+      </header>
+      <div class="tiles">
+        {featured.map((project) => <ProjectTile project={project} />)}
       </div>
     </section>
 
-    <section class="strip" aria-labelledby="featured-heading">
-      <div class="strip-header">
-        <h2 id="featured-heading">Featured projects</h2>
-        <a href="/projects/">All projects →</a>
-      </div>
-      <div class="project-grid">
-        {featuredProjects.map((project) => <ProjectCard project={project} />)}
-      </div>
-    </section>
-
-    <section class="strip" aria-labelledby="latest-heading">
-      <div class="strip-header">
-        <h2 id="latest-heading">Latest writing</h2>
-        <a href="/blog/">All posts →</a>
-      </div>
-      <div class="post-list">
-        {latestPosts.map((post) => <PostCard post={post} />)}
+    <section aria-labelledby="h-posts">
+      <header class="rule-head">
+        <span class="kicker" id="h-posts">Latest writing</span>
+        <a class="aside" href="/blog/">All posts →</a>
+      </header>
+      <div class="rows">
+        {recent.map((post) => <PostRow post={post} />)}
       </div>
     </section>
   </div>
-</BaseLayout>
+</Shell>
 
 <style>
   .intro {
-    max-width: 38rem;
-    margin-inline: auto;
-    text-align: center;
-    padding-block: 1rem 2rem;
+    font-family: var(--font-head);
+    font-size: var(--size-3);
+    line-height: 1.4;
+    max-width: 34ch;
+    padding-block: clamp(2.5rem, 6vh, 4rem);
   }
 
-  .intro p {
-    font-size: var(--text-lg);
-    color: var(--text-muted);
-    text-wrap: balance;
+  section {
+    margin-bottom: 4.5rem;
   }
 
-  .intro-links {
-    display: flex;
-    justify-content: center;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 2rem;
   }
 
-  .strip {
-    margin-top: 4.5rem;
+  .rows > :global(* + *) {
+    border-top: 1px solid var(--line);
   }
-
-  .strip-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 1.5rem;
-  }
-
-  .strip-header h2 {
-    font-size: var(--text-xl);
-  }
-
-  .strip-header a {
-    font-size: var(--text-sm);
-    white-space: nowrap;
-  }
-
 </style>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" font-family="Menlo, monospace">
+  <rect width="1200" height="800" fill="#f6f4f0"/>
+  <!-- cross-section: flash head, throat, flared horn -->
+  <g fill="none" stroke="#1b1917" stroke-width="3">
+    <rect x="130" y="300" width="150" height="200"/>
+    <path d="M280 330 H400 L760 190 M280 470 H400 L760 610"/>
+    <path d="M760 190 V610"/>
+    <!-- inner reflector wall -->
+    <path d="M400 345 L740 215 M400 455 L740 585" stroke-dasharray="5 6"/>
+  </g>
+  <!-- light rays in copper -->
+  <g fill="none" stroke="#a84e24" stroke-width="2">
+    <path d="M770 250 L1080 180 M770 400 L1090 400 M770 550 L1080 620 M770 320 L1085 290 M770 480 L1085 510"/>
+  </g>
+  <!-- dimensions -->
+  <g stroke="#6e675e" stroke-width="1.5">
+    <path d="M400 660 H760 M400 650 V670 M760 650 V670"/>
+    <path d="M810 190 V610 M800 190 H820 M800 610 H820"/>
+  </g>
+  <g fill="#6e675e" font-size="17">
+    <text x="522" y="692">L 96 MM</text>
+    <text x="830" y="408">Ø 168</text>
+    <text x="140" y="282">SPEEDLIGHT</text>
+  </g>
+  <!-- title block -->
+  <g>
+    <rect x="820" y="660" width="330" height="90" fill="none" stroke="#1b1917" stroke-width="2"/>
+    <line x1="820" y1="690" x2="1150" y2="690" stroke="#1b1917" stroke-width="2"/>
+    <text x="834" y="682" font-size="17" fill="#1b1917">CONE MOD · SECTION A-A</text>
+    <text x="834" y="720" font-size="15" fill="#6e675e">PLA · 0.2 LAYER · 6 WALLS</text>
+    <text x="834" y="740" font-size="15" fill="#6e675e">E.LUO · REV 9</text>
+  </g>
+</svg>
